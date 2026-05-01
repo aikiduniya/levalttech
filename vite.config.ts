@@ -15,8 +15,7 @@ const isStatic = process.env.STATIC_SPA === "1";
 // Post-build fixups for static hosting:
 //  1. cloudflare adapter writes dist/server/index.js, but the prerender plugin
 //     expects dist/server/server.js — alias it before prerender boots.
-//  2. After prerender, TanStack writes the SPA fallback to dist/client/_shell.html.
-//     Shared hosting needs a root index.html, so rename it.
+//  2. If any TanStack version still writes _shell.html, promote it to index.html.
 const staticFixups = {
   name: "lovable-static-fixups",
   apply: "build" as const,
@@ -44,7 +43,10 @@ export default defineConfig(
     ? {
         tanstackStart: {
           prerender: { enabled: true, crawlLinks: true },
-          spa: { enabled: true },
+          spa: {
+            enabled: true,
+            prerender: { outputPath: "/index" },
+          },
         },
         plugins: [staticFixups],
       }

@@ -13,7 +13,7 @@ npm run build:static
 > `npm run build` Lovable publish ke liye SSR build banata hai (`dist/client` + `dist/server` dono).
 > `npm run build:static` sirf static SPA banata hai aur output `dist/client` mein hota hai.
 
-Build complete hone ke baad `dist/client/` folder banega. **Sirf is folder ke andar wali files** upload karni hain — `dist/client` folder ko khud nahi.
+Build complete hone ke baad `dist/client/` folder banega aur uske andar `index.html` lazmi hoga. **Sirf is folder ke andar wali files** upload karni hain — `dist/client` folder ko khud nahi.
 
 ## 2. Hostinger pe upload
 
@@ -41,6 +41,7 @@ Hostinger pe agar email account `support@levalt.tech` already bana hua hai aur i
 ## Troubleshooting
 
 - **Refresh pe 404**: `.htaccess` upload nahi hua. File Manager mein hidden files dikhayein aur dobara upload karein.
+- **`index.html` missing**: latest code pull karein, phir `npm install` aur `npm run build:static` dobara chalayein. Agar phir bhi missing ho to build ka last error message share karein.
 - **Contact form "Failed to send"**: 
   - hPanel → Email Accounts mein dekh lein ke `support@levalt.tech` ka password sahi hai.
   - Hostinger File Manager mein `error_log` file check karein (public_html ke andar) — wahan SMTP error message hota hai.

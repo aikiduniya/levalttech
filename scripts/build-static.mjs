@@ -4,7 +4,7 @@
 //
 // Strategy:
 //   1. Run `vite build` with STATIC_SPA=1.
-//   2. If the build completed prerender (we detect dist/client/_shell.html or index.html),
+//   2. If the build completed prerender (we detect dist/client index output),
 //      treat it as success regardless of exit code, and run the postbuild step.
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -19,7 +19,11 @@ const result = spawnSync("vite", ["build"], {
 });
 
 const clientDir = resolve(process.cwd(), "dist/client");
-const built = existsSync(resolve(clientDir, "_shell.html")) || existsSync(resolve(clientDir, "index.html"));
+const built =
+  existsSync(resolve(clientDir, "index.html")) ||
+  existsSync(resolve(clientDir, ".html")) ||
+  existsSync(resolve(clientDir, "_shell.html")) ||
+  existsSync(resolve(clientDir, "_shell/index.html"));
 
 if (!built) {
   console.error("\n[build:static] vite build failed before producing dist/client output.");

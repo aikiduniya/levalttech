@@ -45,7 +45,7 @@ export default defineConfig(
           prerender: { enabled: true, crawlLinks: true },
           spa: {
             enabled: true,
-            prerender: { outputPath: "/" },
+            prerender: { outputPath: "/index" },
           },
         },
         plugins: [staticFixups],

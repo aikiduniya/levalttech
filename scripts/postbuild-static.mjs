@@ -1,8 +1,8 @@
 // Post-build fixups for `npm run build:static` (Hostinger / shared hosting).
 // Runs after `vite build` to:
-//   1. Promote dist/client/_shell.html -> dist/client/index.html (root SPA entry).
+//   1. Ensure dist/client/index.html exists (root SPA entry).
 //   2. Remove dist/server (not needed on shared hosting).
-import { existsSync, renameSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, renameSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -10,15 +10,21 @@ const clientDir = resolve(root, "dist/client");
 const serverDir = resolve(root, "dist/server");
 
 const shell = resolve(clientDir, "_shell.html");
+const shellIndex = resolve(clientDir, "_shell/index.html");
 const indexHtml = resolve(clientDir, "index.html");
 
-if (existsSync(shell) && !existsSync(indexHtml)) {
+if (existsSync(indexHtml)) {
+  console.log("[build:static] index.html ready");
+} else if (existsSync(shell)) {
   renameSync(shell, indexHtml);
   console.log("[build:static] _shell.html -> index.html");
-} else if (existsSync(indexHtml)) {
-  console.log("[build:static] index.html already exists, skipping rename");
+} else if (existsSync(shellIndex)) {
+  copyFileSync(shellIndex, indexHtml);
+  rmSync(resolve(clientDir, "_shell"), { recursive: true, force: true });
+  console.log("[build:static] _shell/index.html -> index.html");
 } else {
-  console.warn("[build:static] WARNING: no _shell.html or index.html in dist/client");
+  console.error("[build:static] ERROR: index.html was not generated in dist/client");
+  process.exit(1);
 }
 
 if (existsSync(serverDir)) {

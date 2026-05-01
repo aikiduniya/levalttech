@@ -19,7 +19,8 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-export const Route = (createFileRoute("/api/contact") as any)({
+export const Route = createFileRoute("/api/contact")({
+  // @ts-expect-error - server route handlers are recognized by the TanStack plugin
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {

@@ -20,6 +20,7 @@ function escapeHtml(s: string) {
 }
 
 export const Route = createFileRoute("/api/contact")({
+  // @ts-expect-error - server route handlers are recognized by the TanStack plugin
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {

@@ -5,11 +5,4 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig({
-  // Build a static SPA — required for shared hosting (Hostinger / cPanel).
-  // After `npm run build`, upload everything inside `dist/client` to public_html.
-  tanstackStart: {
-    prerender: { enabled: false },
-    spa: { enabled: true },
-  },
-});
+export default defineConfig({});

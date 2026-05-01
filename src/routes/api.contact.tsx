@@ -18,22 +18,27 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
+function shouldSendCustomerReply(email: string) {
+  const domain = email.split("@")[1]?.toLowerCase() || "";
+  const blockedDomains = new Set(["example.com", "example.net", "example.org", "test.com", "invalid.com"]);
+  return Boolean(domain) && !blockedDomains.has(domain) && !domain.endsWith(".test") && !domain.endsWith(".invalid");
+}
+
 // Detect Cloudflare Workers runtime
 function isWorkerRuntime() {
   return typeof (globalThis as any).WebSocketPair !== "undefined" || typeof (globalThis as any).caches !== "undefined" && typeof (globalThis as any).process === "undefined";
 }
 
-async function sendBoth(opts: {
+async function sendContactEmails(opts: {
   password: string;
-  name: string;
   email: string;
-  service: string;
   adminHtml: string;
   replyHtml: string;
   adminSubject: string;
   replySubject: string;
 }) {
-  const { password, name: _n, email, service: _s, adminHtml, replyHtml, adminSubject, replySubject } = opts;
+  const { password, email, adminHtml, replyHtml, adminSubject, replySubject } = opts;
+  const sendAutoReply = shouldSendCustomerReply(email);
 
   if (isWorkerRuntime()) {
     const { WorkerMailer } = await import("worker-mailer");
@@ -51,12 +56,18 @@ async function sendBoth(opts: {
       subject: adminSubject,
       html: adminHtml,
     });
-    await mailer.send({
-      from: { name: "Levalt.tech", email: SMTP_USER },
-      to: { email },
-      subject: replySubject,
-      html: replyHtml,
-    });
+    if (sendAutoReply) {
+      try {
+        await mailer.send({
+          from: { name: "Levalt.tech", email: SMTP_USER },
+          to: { email },
+          subject: replySubject,
+          html: replyHtml,
+        });
+      } catch (err) {
+        console.warn("Customer auto-reply failed after admin alert was sent:", err);
+      }
+    }
     return;
   }
 
@@ -75,12 +86,18 @@ async function sendBoth(opts: {
     subject: adminSubject,
     html: adminHtml,
   });
-  await transporter.sendMail({
-    from: `"Levalt.tech" <${SMTP_USER}>`,
-    to: email,
-    subject: replySubject,
-    html: replyHtml,
-  });
+  if (sendAutoReply) {
+    try {
+      await transporter.sendMail({
+        from: `"Levalt.tech" <${SMTP_USER}>`,
+        to: email,
+        subject: replySubject,
+        html: replyHtml,
+      });
+    } catch (err) {
+      console.warn("Customer auto-reply failed after admin alert was sent:", err);
+    }
+  }
 }
 
 export const Route = createFileRoute("/api/contact")({
@@ -143,11 +160,9 @@ export const Route = createFileRoute("/api/contact")({
               <p style="font-size:12px;color:#999;">Levalt.tech · support@levalt.tech</p>
             </div>`;
 
-          await sendBoth({
+          await sendContactEmails({
             password,
-            name,
             email,
-            service,
             adminHtml,
             replyHtml,
             adminSubject: `New enquiry from ${name} — ${service}`,

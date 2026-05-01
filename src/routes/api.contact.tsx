@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import nodemailer from "nodemailer";
+import { WorkerMailer } from "worker-mailer";
 import { z } from "zod";
 
 const ContactSchema = z.object({
@@ -28,20 +28,22 @@ export const Route = createFileRoute("/api/contact")({
           const body = await request.json();
           const parsed = ContactSchema.safeParse(body);
           if (!parsed.success) {
-            return Response.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+            return Response.json({ error: "Invalid input" }, { status: 400 });
           }
           const { name, email, company, service, message } = parsed.data;
 
           const password = process.env.SMTP_PASSWORD;
           if (!password) {
+            console.error("SMTP_PASSWORD not configured");
             return Response.json({ error: "Email service not configured" }, { status: 500 });
           }
 
-          const transporter = nodemailer.createTransport({
+          const mailer = await WorkerMailer.connect({
             host: SMTP_HOST,
             port: SMTP_PORT,
             secure: true,
-            auth: { user: SMTP_USER, pass: password },
+            credentials: { username: SMTP_USER, password },
+            authType: "login",
           });
 
           const safe = {
@@ -52,7 +54,6 @@ export const Route = createFileRoute("/api/contact")({
             message: escapeHtml(message).replace(/\n/g, "<br/>"),
           };
 
-          // 1) Email to admin
           const adminHtml = `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#ffffff;color:#111;">
               <h2 style="color:#5b3df5;margin:0 0 16px;">New contact enquiry — Levalt.tech</h2>
@@ -67,15 +68,14 @@ export const Route = createFileRoute("/api/contact")({
               <p style="margin-top:24px;font-size:12px;color:#999;">Sent from levalt.tech contact form</p>
             </div>`;
 
-          await transporter.sendMail({
-            from: `"Levalt.tech Website" <${SMTP_USER}>`,
-            to: ADMIN_EMAIL,
-            replyTo: email,
+          await mailer.send({
+            from: { name: "Levalt.tech Website", email: SMTP_USER },
+            to: { email: ADMIN_EMAIL },
+            reply: { email },
             subject: `New enquiry from ${name} — ${service}`,
             html: adminHtml,
           });
 
-          // 2) Auto-reply to customer
           const replyHtml = `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#ffffff;color:#111;">
               <h2 style="color:#5b3df5;margin:0 0 12px;">Thanks for reaching out, ${safe.name}!</h2>
@@ -88,23 +88,23 @@ export const Route = createFileRoute("/api/contact")({
               </div>
               <p style="font-size:14px;line-height:1.6;color:#333;margin-top:20px;">
                 In the meantime, feel free to explore our <a href="https://levalt.tech/services" style="color:#5b3df5;">services</a>
-                or check out the <a href="https://levalt.tech/faq" style="color:#5b3df5;">FAQ</a>.
+                or the <a href="https://levalt.tech/faq" style="color:#5b3df5;">FAQ</a>.
               </p>
               <p style="font-size:14px;line-height:1.6;margin-top:24px;">— The Levalt.tech Team</p>
               <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
               <p style="font-size:12px;color:#999;">Levalt.tech · support@levalt.tech</p>
             </div>`;
 
-          await transporter.sendMail({
-            from: `"Levalt.tech" <${SMTP_USER}>`,
-            to: email,
+          await mailer.send({
+            from: { name: "Levalt.tech", email: SMTP_USER },
+            to: { email },
             subject: "We received your message — Levalt.tech",
             html: replyHtml,
           });
 
           return Response.json({ ok: true });
         } catch (err: any) {
-          console.error("Contact form error:", err);
+          console.error("Contact form error:", err?.message || err);
           return Response.json({ error: "Failed to send message" }, { status: 500 });
         }
       },

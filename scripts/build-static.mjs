@@ -21,6 +21,7 @@ const result = spawnSync("vite", ["build"], {
 const clientDir = resolve(process.cwd(), "dist/client");
 const built =
   existsSync(resolve(clientDir, "index.html")) ||
+  existsSync(resolve(clientDir, ".html")) ||
   existsSync(resolve(clientDir, "_shell.html")) ||
   existsSync(resolve(clientDir, "_shell/index.html"));
 

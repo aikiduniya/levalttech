@@ -192,8 +192,10 @@ export const Route = createFileRoute("/api/contact")({
           });
 
           return Response.json({ ok: true });
-        } catch (err: any) {
-          console.error("Contact form error:", err?.message || err, err?.stack);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          const stack = err instanceof Error ? err.stack : undefined;
+          console.error("Contact form error:", message, stack);
           return Response.json({ error: "Failed to send message" }, { status: 500 });
         }
       },

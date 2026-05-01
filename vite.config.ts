@@ -4,19 +4,41 @@
 //     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { copyFileSync, existsSync } from "node:fs";
+import { resolve } from "node:path";
 
 // STATIC_SPA=1 -> static build for shared hosting (Hostinger).
 //                 Use `npm run build:static`. Output: dist/client (upload contents to public_html).
 // (default)    -> Lovable publish build (SSR). Use `npm run build`.
 const isStatic = process.env.STATIC_SPA === "1";
 
+// Tiny plugin: prerender plugin expects dist/server/server.js, but cloudflare
+// adapter writes dist/server/index.js. Alias them so prerender can boot.
+const aliasServerEntry = {
+  name: "lovable-alias-server-entry",
+  apply: "build" as const,
+  closeBundle: {
+    sequential: true,
+    order: "post" as const,
+    handler() {
+      const dir = resolve(process.cwd(), "dist/server");
+      const src = resolve(dir, "index.js");
+      const dst = resolve(dir, "server.js");
+      if (existsSync(src) && !existsSync(dst)) {
+        copyFileSync(src, dst);
+      }
+    },
+  },
+};
+
 export default defineConfig(
   isStatic
     ? {
         tanstackStart: {
-          prerender: { enabled: false },
+          prerender: { enabled: true, crawlLinks: true },
           spa: { enabled: true },
         },
+        plugins: [aliasServerEntry],
       }
     : {},
 );

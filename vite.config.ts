@@ -46,7 +46,7 @@ export default defineConfig(
           prerender: { enabled: true, crawlLinks: true },
           spa: { enabled: true },
         },
-        plugins: [aliasServerEntry],
+        plugins: [staticFixups],
       }
     : {},
 );

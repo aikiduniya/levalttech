@@ -19,10 +19,10 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-export const Route = createFileRoute("/api/contact")({
+export const Route = (createFileRoute("/api/contact") as any)({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request }: { request: Request }) => {
         try {
           const body = await request.json();
           const parsed = ContactSchema.safeParse(body);

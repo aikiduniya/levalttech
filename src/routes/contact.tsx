@@ -29,13 +29,11 @@ function Contact() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      const res = await fetch("/contact.php", { method: "POST", body: fd });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Failed to send");
+      if (!res.ok || !data.ok) throw new Error(data.error || "Failed to send");
       toast.success("Message sent! We'll be in touch shortly.");
       setForm({ name: "", email: "", company: "", service: SERVICE_OPTIONS[0], message: "" });
     } catch (err: any) {

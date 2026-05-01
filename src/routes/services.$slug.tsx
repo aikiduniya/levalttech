@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { seo } from "@/lib/seo";
+import type { Service } from "@/lib/services-data";
 import { SERVICES } from "@/lib/services-data";
 import { ArrowRight, Check } from "lucide-react";
 
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/services/$slug")({
 });
 
 function ServiceDetail() {
-  const { service } = Route.useLoaderData();
+  const { service } = Route.useLoaderData() as { service: Service };
 
   return (
     <div>

@@ -10,6 +10,7 @@ const clientDir = resolve(root, "dist/client");
 const serverDir = resolve(root, "dist/server");
 
 const shell = resolve(clientDir, "_shell.html");
+const dotHtml = resolve(clientDir, ".html");
 const shellIndex = resolve(clientDir, "_shell/index.html");
 const indexHtml = resolve(clientDir, "index.html");
 
@@ -18,6 +19,9 @@ if (existsSync(indexHtml)) {
 } else if (existsSync(shell)) {
   renameSync(shell, indexHtml);
   console.log("[build:static] _shell.html -> index.html");
+} else if (existsSync(dotHtml)) {
+  renameSync(dotHtml, indexHtml);
+  console.log("[build:static] .html -> index.html");
 } else if (existsSync(shellIndex)) {
   copyFileSync(shellIndex, indexHtml);
   rmSync(resolve(clientDir, "_shell"), { recursive: true, force: true });

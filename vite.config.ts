@@ -6,9 +6,10 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
-  tsr: {
-    // Build a static SPA — required for shared hosting (Hostinger / cPanel).
-    // After `npm run build`, upload the contents of `dist/client` to public_html.
+  // Build a static SPA — required for shared hosting (Hostinger / cPanel).
+  // After `npm run build`, upload everything inside `dist/client` to public_html.
+  tanstackStart: {
     prerender: { enabled: false },
+    spa: { enabled: true },
   },
 });

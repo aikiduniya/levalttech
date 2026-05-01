@@ -15,18 +15,40 @@ const SMTP_USER = "support@levalt.tech";
 const ADMIN_EMAIL = "support@levalt.tech";
 
 function escapeHtml(s: string) {
-  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+  return s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
 }
 
 function shouldSendCustomerReply(email: string) {
   const domain = email.split("@")[1]?.toLowerCase() || "";
-  const blockedDomains = new Set(["example.com", "example.net", "example.org", "test.com", "invalid.com"]);
-  return Boolean(domain) && !blockedDomains.has(domain) && !domain.endsWith(".test") && !domain.endsWith(".invalid");
+  const blockedDomains = new Set([
+    "example.com",
+    "example.net",
+    "example.org",
+    "test.com",
+    "invalid.com",
+  ]);
+  return (
+    Boolean(domain) &&
+    !blockedDomains.has(domain) &&
+    !domain.endsWith(".test") &&
+    !domain.endsWith(".invalid")
+  );
 }
 
 // Detect Cloudflare Workers runtime
 function isWorkerRuntime() {
-  return typeof (globalThis as any).WebSocketPair !== "undefined" || typeof (globalThis as any).caches !== "undefined" && typeof (globalThis as any).process === "undefined";
+  const runtime = globalThis as typeof globalThis & {
+    WebSocketPair?: unknown;
+    caches?: unknown;
+    process?: unknown;
+  };
+  return (
+    typeof runtime.WebSocketPair !== "undefined" ||
+    (typeof runtime.caches !== "undefined" && typeof runtime.process === "undefined")
+  );
 }
 
 async function sendContactEmails(opts: {

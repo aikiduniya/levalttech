@@ -6,8 +6,12 @@ Ye site shared hosting (Hostinger, cPanel, etc.) pe static SPA + PHP contact for
 
 ```bash
 npm install
-npm run build
+npm run build:static
 ```
+
+> ⚠️ Hostinger ke liye **`npm run build:static`** chalayein — `npm run build` nahi.
+> `npm run build` Lovable publish ke liye SSR build banata hai (`dist/client` + `dist/server` dono).
+> `npm run build:static` sirf static SPA banata hai aur output `dist/client` mein hota hai.
 
 Build complete hone ke baad `dist/client/` folder banega. **Sirf is folder ke andar wali files** upload karni hain — `dist/client` folder ko khud nahi.
 
